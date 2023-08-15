@@ -1,64 +1,30 @@
+import { interval } from "rxjs";
+import { boardHeight, boardWidth } from "./config";
+import { pieces } from "./pieces";
 import "./style.css";
-
-const boardWidth = 10;
-const boardHeight = 20;
-
-const pieces = {
-  I: [[1], [1], [1], [1]],
-  J: [
-    [0, 1],
-    [0, 1],
-    [1, 1],
-  ],
-  L: [
-    [1, 0],
-    [1, 0],
-    [1, 1],
-  ],
-  O: [
-    [1, 1],
-    [1, 1],
-  ],
-  S: [
-    [0, 1, 1],
-    [1, 1, 0],
-  ],
-  T: [
-    [1, 1, 1],
-    [0, 1, 0],
-  ],
-  Z: [
-    [1, 1, 0],
-    [0, 1, 1],
-  ],
-};
 
 const canvas = document.getElementById("tetris") as HTMLCanvasElement;
 const context = canvas.getContext("2d");
+const board = createBoard();
+
+const pieceBlockSize = canvas.width / boardWidth;
 
 if (context) {
-  let startPositionX = 0;
-  let startPositionY = 0;
-
   context.beginPath();
 
-  context.fillStyle = "red";
-  renderPiece(context, pieces.S, startPositionX, startPositionY);
+  // interval(500).subscribe({
+  //   next: () => {
+  //     movePieceDown();
+  //   },
+  // });
 
-  setInterval(() => {
-    context.clearRect(
-      startPositionX,
-      startPositionX,
-      canvas.width,
-      canvas.height
-    );
-    context.moveTo(startPositionX, startPositionY);
-    renderPiece(context, pieces.S, startPositionX, startPositionY);
-    if (startPositionY <= canvas.height - (pieces.S.length + 1) * 20) {
-      console.log(startPositionY);
-      startPositionY += 20;
-    }
-  }, 500);
+  renderBoard();
+  startTetris();
+}
+
+function startTetris() {
+  let piece = getRandomPiece();
+  renderPiece(context!, piece, 40, 0);
 }
 
 function renderPiece(
@@ -67,16 +33,78 @@ function renderPiece(
   startPositionX: number,
   startPositionY: number
 ) {
+  context!.fillStyle = `rgb(${Math.floor(Math.random() * 255)},${Math.floor(
+    Math.random() * 255
+  )},${Math.floor(Math.random() * 255)})`;
+
   for (const vector of piece) {
     for (const pixel of vector) {
       if (pixel) {
-        context.fillRect(startPositionX, startPositionY, 20, 20);
+        context.fillRect(
+          startPositionX,
+          startPositionY,
+          pieceBlockSize,
+          pieceBlockSize
+        );
       }
 
-      startPositionX += 20;
+      startPositionX += pieceBlockSize;
     }
 
-    startPositionX = 0;
-    startPositionY += 20;
+    startPositionX = 40;
+    startPositionY += pieceBlockSize;
   }
+}
+
+function renderBoard() {
+  board.forEach((line, lineIndex) => {
+    line.forEach((square, squareIndex) => {
+      context!.fillStyle = "#fff";
+
+      context!.fillRect(
+        lineIndex * pieceBlockSize,
+        squareIndex * pieceBlockSize,
+        pieceBlockSize,
+        pieceBlockSize
+      );
+    });
+  });
+}
+
+function createBoard() {
+  let board = [];
+  let i = 0;
+  let j = 0;
+
+  while (j < boardWidth) {
+    let line = [];
+    while (i < boardHeight) {
+      line.push(0);
+      i++;
+    }
+
+    board.push(line);
+    i = 0;
+    j++;
+  }
+
+  return board;
+}
+
+function movePieceDown() {
+  if (canGoDown()) {
+    // renderPiece();
+  }
+}
+
+function canGoDown() {
+  return false;
+}
+
+function getRandomPiece() {
+  const keys = Object.keys(pieces);
+  const randomKey = keys[
+    Math.floor(Math.random() * keys.length)
+  ] as keyof typeof pieces;
+  return pieces[randomKey];
 }
